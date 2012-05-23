@@ -1,9 +1,9 @@
-from dicttree.ordereddict import Node
+from dicttree.ordereddict import Node as _Node
 
 from dicttree.qt import aspects
 
-QtApp = aspects.qtapp(Node)
-Node = aspects.qt(Node)
+QtApp = aspects.qtapp(_Node)
+Node = aspects.qt(_Node)
 
-MainWindow = aspects.mainwindow(Node)
-MenuBar = aspects.menubar(Node)
+MainWindow = aspects.mainwindow(_Node, pdb=True)
+MenuBar = aspects.menubar(_Node)
