@@ -20,28 +20,28 @@ class qtapp(Aspect):
     def run(self):
         for x in self.values():
             x.qtinit()
-            x._widget.show()
+            x.qt.show()
         self._app.exec_()
         sys.exit()
 
+
 class qt(Aspect):
-    """A qt widget
+    """A qt node
     """
-    # XXX: consider renaming to qt and qtcls
-    _widget = None
-    _widgetcls = None
+    _qt = None
+    _qtcls = None
 
     @property
-    def widget(self):
-        if self._widget is None:
-            self._widget = self._widgetcls()
-        return self._widget
+    def qt(self):
+        if self._qt is None:
+            self._qt = self._qtcls()
+        return self._qt
 
     @aspect.plumb
-    def __init__(_next, self, widgetcls=None, **kw):
+    def __init__(_next, self, qtcls=None, **kw):
         _next(**kw)
-        if widgetcls is not None:
-            self._widgetcls = widgetcls
+        if qtcls is not None:
+            self._qtcls = qtcls
 
     def qtinit(self):
         """Make sure qt widgets are instantiated
@@ -59,17 +59,17 @@ class menubar(qt):
     @aspect.plumb
     def append(_next, self, node):
         _next(node)
-        self.parent.widget.menuBar().addMenu(node.name)
+        self.parent.qt.menuBar().addMenu(node.name)
 
 
 class mainwindow(qt):
     """qt mainwindow
     """
     _menu = None
-    _widgetcls = QMainWindow
+    _qtcls = QMainWindow
 
     # XXX: how can we reach the aspect super class' unbound methods?
     # mainwindow.super.qtinit() ?
     def _qtinit(self):
         label = QLabel("Hello World")
-        self.widget.setCentralWidget(label)
+        self.qt.setCentralWidget(label)
