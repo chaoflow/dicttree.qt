@@ -7,24 +7,6 @@ from metachao import aspect
 from metachao.aspect import Aspect
 
 
-class qtapp(Aspect):
-    """A qt application
-    """
-    @aspect.plumb
-    def __init__(_next, self, argv=None, **kw):
-        _next(**kw)
-        if argv is None:
-            argv = sys.argv
-        self._app = QApplication(argv)
-
-    def run(self):
-        for x in self.values():
-            x.qtinit()
-            x.qt.show()
-        self._app.exec_()
-        sys.exit()
-
-
 class qt(Aspect):
     """A qt node
     """
@@ -34,6 +16,9 @@ class qt(Aspect):
     @property
     def qt(self):
         if self._qt is None:
+            # make sure parent is created first
+            if self.parent:
+                self.parent.qt
             self._qt = self._qtcls()
         return self._qt
 
@@ -55,11 +40,32 @@ class qt(Aspect):
         pass
 
 
-class menubar(qt):
+class qtapp(qt):
+    """A qt application
+    """
+    _argv = None
+    _qtcls = QApplication
+
+    @property
+    def qt(self):
+        if self._qt is None:
+            self._qt = self._qtcls(self._argv)
+        return self._qt
+
     @aspect.plumb
-    def append(_next, self, node):
-        _next(node)
-        self.parent.qt.menuBar().addMenu(node.name)
+    def __init__(_next, self, argv=None, **kw):
+        _next(**kw)
+        if argv is not None:
+            self._argv = argv
+        if self._argv is None:
+            self._argv = sys.argv
+
+    def run(self):
+        self.qtinit()
+        for x in self.values():
+            x.qt.show()
+        self.qt.exec_()
+        sys.exit()
 
 
 class mainwindow(qt):
@@ -73,3 +79,14 @@ class mainwindow(qt):
     def _qtinit(self):
         label = QLabel("Hello World")
         self.qt.setCentralWidget(label)
+
+
+class menubar(qt):
+    @property
+    def qt(self):
+        return self.parent.qt.menuBar()
+
+    @aspect.plumb
+    def append(_next, self, node):
+        _next(node)
+        self.qt.addMenu(node.name)
