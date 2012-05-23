@@ -19,7 +19,7 @@ class qt(Aspect):
             # make sure parent is created first
             if self.parent:
                 self.parent.qt
-            self._qt = self._qtcls()
+            self._qtinit()
         return self._qt
 
     @aspect.plumb
@@ -33,11 +33,11 @@ class qt(Aspect):
         """
         self._qtinit()
         for x in self.values():
-            if hasattr(x, 'qtinit'):
-                x.qtinit()
+            x._qtinit()
 
     def _qtinit(self):
-        pass
+        if self._qtcls:
+            self._qt = self._qtcls()
 
 
 class qtapp(qt):
@@ -46,12 +46,6 @@ class qtapp(qt):
     _argv = None
     _qtcls = QApplication
 
-    @property
-    def qt(self):
-        if self._qt is None:
-            self._qt = self._qtcls(self._argv)
-        return self._qt
-
     @aspect.plumb
     def __init__(_next, self, argv=None, **kw):
         _next(**kw)
@@ -59,6 +53,10 @@ class qtapp(qt):
             self._argv = argv
         if self._argv is None:
             self._argv = sys.argv
+
+    def _qtinit(self):
+        if self._qt is None:
+            self._qt = self._qtcls(self._argv)
 
     def run(self):
         self.qtinit()
@@ -77,8 +75,10 @@ class mainwindow(qt):
     # XXX: how can we reach the aspect super class' unbound methods?
     # mainwindow.super.qtinit() ?
     def _qtinit(self):
-        label = QLabel("Hello World")
-        self.qt.setCentralWidget(label)
+        if self._qt is None:
+            self._qt = self._qtcls()
+            label = QLabel("Hello World")
+            self._qt.setCentralWidget(label)
 
 
 class menubar(qt):
