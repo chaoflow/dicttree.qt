@@ -104,6 +104,14 @@ class mainwindow(qt):
             self._qt.setCentralWidget(label)
 
 
+class label(qt):
+    _qtcls = QLabel
+
+    @property
+    def qtargs(self):
+        return (getattr(self.attrs, 'title', ''),)
+
+
 class menubar(qt):
     @property
     def qt(self):
