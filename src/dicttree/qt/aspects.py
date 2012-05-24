@@ -6,6 +6,9 @@ from PySide.QtGui import *
 from metachao import aspect
 from metachao.aspect import Aspect
 
+from dicttree.qt.log import getLogger
+log = getLogger('aspects')
+
 
 class qt(Aspect):
     """A qt node
@@ -50,10 +53,12 @@ class qt(Aspect):
     def qtinit(self):
         """Make sure qt widgets are instantiated
         """
+        log.debug('qtinit begin: %s' % self.name)
         self._qtinit()
         for x in self.values():
             if hasattr(x, 'qtinit'):
                 x.qtinit()
+        log.debug('qtinit end: %s ' % self.name)
 
     def _qtinit(self):
         if self._qt is None and self._qtcls:
