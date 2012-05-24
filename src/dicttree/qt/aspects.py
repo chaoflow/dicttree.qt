@@ -92,16 +92,16 @@ class qtapp(qt):
 class mainwindow(qt):
     """qt mainwindow
     """
+    _centralwidget = None
     _menu = None
     _qtcls = QMainWindow
 
-    # XXX: how can we reach the aspect super class' unbound methods?
-    # mainwindow.super.qtinit() ?
-    def _qtinit(self):
-        if self._qt is None:
-            self._qt = self._qtcls()
-            label = QLabel("Hello World")
-            self._qt.setCentralWidget(label)
+    @aspect.plumb
+    def __setitem__(_next, self, key, node):
+        _next(key, node)
+        if self._centralwidget is None:
+            self._centralwidget = node.qt
+            self.qt.setCentralWidget(node.qt)
 
 
 class label(qt):
