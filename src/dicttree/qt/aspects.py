@@ -10,8 +10,15 @@ from metachao.aspect import Aspect
 class qt(Aspect):
     """A qt node
     """
+    # qt instance object
     _qt = None
+
+    # qt class to create instance object
     _qtcls = None
+
+    # args and kw to be passed to qtcls
+    _qtargs = None    # tuple
+    _qtkw = None      # dict
 
     @property
     def qt(self):
@@ -21,6 +28,18 @@ class qt(Aspect):
                 self.parent.qt
             self._qtinit()
         return self._qt
+
+    @property
+    def qtargs(self):
+        if self._qtargs is None:
+            return ()
+        return self._qtargs
+
+    @property
+    def qtkw(self):
+        if self._qtkw is None:
+            return {}
+        return self._qtkw
 
     @aspect.plumb
     def __init__(_next, self, qtcls=None, **kw):
@@ -33,30 +52,29 @@ class qt(Aspect):
         """
         self._qtinit()
         for x in self.values():
-            x._qtinit()
+            if hasattr(x, 'qtinit'):
+                x.qtinit()
 
     def _qtinit(self):
-        if self._qtcls:
-            self._qt = self._qtcls()
+        if self._qt is None and self._qtcls:
+            args = self.qtargs
+            kw = self.qtkw
+            log.debug('_qtinit: %s with %r %r' % (self.name, args, kw))
+            self._qt = self._qtcls(*args, **kw)
 
 
 class qtapp(qt):
     """A qt application
     """
-    _argv = None
     _qtcls = QApplication
 
     @aspect.plumb
     def __init__(_next, self, argv=None, **kw):
         _next(**kw)
         if argv is not None:
-            self._argv = argv
-        if self._argv is None:
-            self._argv = sys.argv
-
-    def _qtinit(self):
-        if self._qt is None:
-            self._qt = self._qtcls(self._argv)
+            self._qtargs = (argv,)
+        if self._qtargs is None:
+            self._qtargs = (sys.argv,)
 
     def run(self):
         self.qtinit()
