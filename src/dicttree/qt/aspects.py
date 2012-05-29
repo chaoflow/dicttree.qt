@@ -142,3 +142,26 @@ class menubar(qt):
     def append(_next, self, node):
         _next(node)
         self.qt.addMenu(node.name)
+
+
+class table(qt):
+    _qtcls = QTableWidget
+
+    @property
+    def qtargs(self):
+        args = [
+            self.attrs.get('rows', 0),
+            self.attrs.get('cols', 0),
+            ]
+        return args
+
+    @aspect.plumb
+    def append(_next, self, row):
+        _next(row)
+        row_idx = len(self.keys())
+        for col_idx, x in enumerate(row.attrs.values()):
+            item = QTableWidgetItem(x)
+            self.qt.setItem(row_idx, col_idx, item)
+        self.qt.setRowCount(row_idx+1)
+        self.qt.adjustSize()
+
