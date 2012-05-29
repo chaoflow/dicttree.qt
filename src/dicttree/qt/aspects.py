@@ -111,15 +111,13 @@ class qtapp(qt):
 class mainwindow(qt):
     """qt mainwindow
     """
-    _centralwidget = None
     _menu = None
     _qtcls = QMainWindow
 
     @aspect.plumb
     def __setitem__(_next, self, key, node):
         _next(key, node)
-        if self._centralwidget is None:
-            self._centralwidget = node.qt
+        if key == "central":
             self.qt.setCentralWidget(node.qt)
 
 
