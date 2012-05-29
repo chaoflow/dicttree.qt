@@ -108,6 +108,10 @@ class qtapp(qt):
         sys.exit()
 
 
+class widget(qt):
+    _qtcls = QWidget
+
+
 class mainwindow(qt):
     """qt mainwindow
     """
