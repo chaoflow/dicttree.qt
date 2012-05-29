@@ -23,6 +23,12 @@ class qt(Aspect):
     _qtargs = None    # tuple
     _qtkw = None      # dict
 
+    _layout = None
+
+    @property
+    def layout(self):
+        return self._layout
+
     @property
     def qt(self):
         if self._qt is None:
@@ -45,10 +51,12 @@ class qt(Aspect):
         return self._qtkw
 
     @aspect.plumb
-    def __init__(_next, self, qtcls=None, **kw):
+    def __init__(_next, self, qtcls=None, layout=None, **kw):
         _next(**kw)
         if qtcls is not None:
             self._qtcls = qtcls
+        if layout is not None:
+            self._layout = layout()
 
     def qtinit(self):
         """Make sure qt widgets are instantiated
@@ -61,11 +69,22 @@ class qt(Aspect):
         log.debug('qtinit end: %s ' % self.name)
 
     def _qtinit(self):
+        log.debug('_qtinit: start: %s' % self.name)
         if self._qt is None and self._qtcls:
             args = self.qtargs
             kw = self.qtkw
-            log.debug('_qtinit: %s with %r %r' % (self.name, args, kw))
+            if self.parent and not self.parent.layout and \
+                    isinstance(self.parent.qt, QWidget):
+                kw['parent'] = self.parent.qt
+            log.debug('_qtcls for %s with %r %r' % (self.name, args, kw))
             self._qt = self._qtcls(*args, **kw)
+            if self.parent and self.parent.layout:
+                log.debug('adding to parent layout')
+                self.parent.layout.addWidget(self._qt)
+            if self._layout:
+                log.debug('setting layout')
+                self._qt.setLayout(self._layout)
+        log.debug('_qtinit: end: %s' % self.name)
 
 
 class qtapp(qt):
