@@ -17,16 +17,19 @@ class qt(Aspect):
     _qt = None
 
     # qt class to create instance object
-    _qtcls = None
+    _qtcls = aspect.cfg(None)
 
     # args and kw to be passed to qtcls
     _qtargs = None    # tuple
     _qtkw = None      # dict
 
     _layout = None
+    _layoutcls = aspect.cfg(layout=None)
 
     @property
     def layout(self):
+        if self._layout is None and self._layoutcls is not None:
+            self._layout = self._layoutcls()
         return self._layout
 
     @property
@@ -49,14 +52,6 @@ class qt(Aspect):
         if self._qtkw is None:
             return {}
         return self._qtkw
-
-    @aspect.plumb
-    def __init__(_next, self, qtcls=None, layout=None, **kw):
-        _next(**kw)
-        if qtcls is not None:
-            self._qtcls = qtcls
-        if layout is not None:
-            self._layout = layout()
 
     def qtinit(self):
         """Make sure qt widgets are instantiated
@@ -81,24 +76,21 @@ class qt(Aspect):
             if self.parent and self.parent.layout:
                 log.debug('adding to parent layout')
                 self.parent.layout.addWidget(self._qt)
-            if self._layout:
+            if self.layout:
                 log.debug('setting layout')
-                self._qt.setLayout(self._layout)
+                self._qt.setLayout(self.layout)
         log.debug('_qtinit: end: %s' % self.name)
 
 
 class qtapp(qt):
     """A qt application
     """
+    _argv = aspect.cfg(sys.argv)
     _qtcls = QApplication
 
-    @aspect.plumb
-    def __init__(_next, self, argv=None, **kw):
-        _next(**kw)
-        if argv is not None:
-            self._qtargs = (argv,)
-        if self._qtargs is None:
-            self._qtargs = (sys.argv,)
+    @property
+    def qtargs(self):
+        return (self._argv,)
 
     def run(self):
         self.qtinit()
