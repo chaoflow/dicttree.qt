@@ -157,11 +157,10 @@ class table(qt):
 
     @aspect.plumb
     def append(_next, self, row):
-        _next(row)
         row_idx = len(self.keys())
-        for col_idx, x in enumerate(row.attrs.values()):
-            item = QTableWidgetItem(x)
-            self.qt.setItem(row_idx, col_idx, item)
+        _next(row)
         self.qt.setRowCount(row_idx+1)
-        self.qt.adjustSize()
+        for col_idx, x in enumerate(row.attrs.values()):
+            item = QTableWidgetItem(str(x))
+            self.qt.setItem(row_idx, col_idx, item)
 
