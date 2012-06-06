@@ -134,3 +134,6 @@ class table(qt):
             item = QTableWidgetItem(str(x))
             self.qt.setItem(row_idx, col_idx, item)
 
+
+class tabbed(qt):
+    _qtcls = QTabWidget
