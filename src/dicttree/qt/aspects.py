@@ -28,17 +28,10 @@ class qt(Aspect):
 
     @property
     def layout(self):
-        if self._layout is None and self._layoutcls is not None:
-            self._layout = self._layoutcls()
         return self._layout
 
     @property
     def qt(self):
-        if self._qt is None:
-            # make sure parent is created first
-            if self.parent:
-                self.parent.qt
-            self._qtinit()
         return self._qt
 
     @property
@@ -53,34 +46,20 @@ class qt(Aspect):
             return {}
         return self._qtkw
 
-    def qtinit(self):
-        """Make sure qt widgets are instantiated
-        """
-        log.debug('qtinit begin: %s' % self.name)
-        self._qtinit()
-        for x in self.values():
-            if hasattr(x, 'qtinit'):
-                x.qtinit()
-        log.debug('qtinit end: %s ' % self.name)
+    @aspect.plumb
+    def __init__(_next, self, **kw):
+        log.debug('init %s start: %s' % (self, kw))
+        self._qt = self._qtcls(*self.qtargs, **self.qtkw)
+        if self._layout is None and self._layoutcls is not None:
+            self._layout = self._layoutcls()
+            self._qt.setLayout(self._layout)
+        _next(**kw)
 
-    def _qtinit(self):
-        log.debug('_qtinit: start: %s' % self.name)
-        if self._qt is None and self._qtcls:
-            args = self.qtargs
-            kw = self.qtkw
-            if self.parent and not self.parent.layout and \
-                    isinstance(self.parent.qt, QWidget):
-                kw['parent'] = self.parent.qt
-            log.debug('_qtcls for %s with %r %r' % (self.name, args, kw))
-            self._qt = self._qtcls(*args, **kw)
-            if self.parent and self.parent.layout:
-                log.debug('adding to parent layout')
-                self.parent.layout.addWidget(self._qt)
-            if self.layout:
-                log.debug('setting layout')
-                self._qt.setLayout(self.layout)
-        log.debug('_qtinit: end: %s' % self.name)
-
+    @aspect.plumb
+    def __setitem__(_next, self, key, val):
+        _next(key, val)
+        if self.layout:
+            self.layout.addWidget(val.qt)
 
 class qtapp(qt):
     """A qt application
@@ -93,7 +72,6 @@ class qtapp(qt):
         return (self._argv,)
 
     def run(self):
-        self.qtinit()
         for x in self.values():
             x.qt.show()
         self.qt.exec_()
@@ -143,7 +121,7 @@ class table(qt):
     def qtargs(self):
         args = [
             self.attrs.get('rows', 0),
-            self.attrs.get('cols', 0),
+            len(self._columns),
             ]
         return args
 
