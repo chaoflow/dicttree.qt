@@ -127,6 +127,7 @@ class table(qt):
 
     @aspect.plumb
     def append(_next, self, row):
+        # XXX: move to __setitem__ and support replacing
         row_idx = len(self.keys())
         _next(row)
         self.qt.setRowCount(row_idx+1)
@@ -137,3 +138,9 @@ class table(qt):
 
 class tabbed(qt):
     _qtcls = QTabWidget
+
+    @aspect.plumb
+    def __setitem__(_next, self, key, val):
+        _next(key, val)
+        # XXX: support replacing
+        self.qt.addTab(val.qt, key)
