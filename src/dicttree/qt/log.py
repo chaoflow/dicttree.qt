@@ -1,4 +1,4 @@
 from dicttree.log import getLogger
 
-logger = getLogger('dicttree.qt')
+logger = getLogger('qt')
 getLogger = logger.getChild
