@@ -26,6 +26,8 @@ class qt(Aspect):
     _layout = None
     _layoutcls = aspect.cfg(layout=None)
 
+    _signals = aspect.cfg(dict())
+
     @property
     def layout(self):
         return self._layout
@@ -54,12 +56,20 @@ class qt(Aspect):
         if self._layout is None and self._layoutcls is not None:
             self._layout = self._layoutcls()
             self._qt.setLayout(self._layout)
+        for signal, slot in self._signals.items():
+            if not callable(slot):
+                slot = getattr(self, slot)
+            # XXX: lambda is needed because of what seems to be a
+            # PySide bug
+            slot_lambda = lambda *_args, **_kw: slot(*_args, **_kw)
+            getattr(self.qt, signal).connect(slot_lambda)
 
     @aspect.plumb
     def __setitem__(_next, self, key, val):
         _next(key, val)
         if self.layout:
             self.layout.addWidget(val.qt)
+
 
 class qtapp(qt):
     """A qt application
@@ -117,6 +127,9 @@ class menubar(qt):
 class table(qt):
     _qtcls = QTableWidget
     _silence = False
+    _signals = dict(
+        itemChanged="itemChanged",
+        )
 
     @property
     def qtargs(self):
@@ -125,13 +138,6 @@ class table(qt):
             len(self._columns),
             ]
         return args
-
-    @aspect.plumb
-    def __init__(_next, self, **kw):
-        qt.__init__.payload(_next, self, **kw)
-        # XXX: Can we handle this via a decorator on the function or
-        # the class?
-        self.qt.itemChanged.connect(lambda item: self.itemChanged(item))
 
     @aspect.plumb
     def append(_next, self, row):
