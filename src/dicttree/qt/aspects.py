@@ -49,11 +49,11 @@ class qt(Aspect):
     @aspect.plumb
     def __init__(_next, self, **kw):
         log.debug('init %s start: %s' % (self, kw))
+        _next(**kw)
         self._qt = self._qtcls(*self.qtargs, **self.qtkw)
         if self._layout is None and self._layoutcls is not None:
             self._layout = self._layoutcls()
             self._qt.setLayout(self._layout)
-        _next(**kw)
 
     @aspect.plumb
     def __setitem__(_next, self, key, val):
