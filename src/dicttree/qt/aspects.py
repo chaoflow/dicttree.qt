@@ -116,6 +116,7 @@ class menubar(qt):
 
 class table(qt):
     _qtcls = QTableWidget
+    _silence = False
 
     @property
     def qtargs(self):
@@ -126,14 +127,43 @@ class table(qt):
         return args
 
     @aspect.plumb
+    def __init__(_next, self, **kw):
+        qt.__init__.payload(_next, self, **kw)
+        # XXX: Can we handle this via a decorator on the function or
+        # the class?
+        self.qt.itemChanged.connect(lambda item: self.itemChanged(item))
+
+    @aspect.plumb
     def append(_next, self, row):
         # XXX: move to __setitem__ and support replacing
         row_idx = len(self.keys())
         _next(row)
         self.qt.setRowCount(row_idx+1)
         for col_idx, x in enumerate(row.attrs.values()):
-            item = QTableWidgetItem(str(x))
+            # bool's are shown as checkboxes for now and are editable
+            # everything else is readonly
+            if type(x) is bool:
+                item = QTableWidgetItem()
+                item.setFlags(Qt.ItemIsUserCheckable | Qt.ItemIsEnabled)
+                item.setCheckState(Qt.Checked if x else Qt.Unchecked)
+            else:
+                item = QTableWidgetItem(str(x))
+                item.setFlags(Qt.ItemIsEnabled)
+            self._silence = True
             self.qt.setItem(row_idx, col_idx, item)
+            self._silence = False
+
+    def itemChanged(self, item):
+        if self._silence:
+            return
+        row = item.row()
+        col = item.column()
+        name = self._columns[col].name
+        if Qt.ItemIsUserCheckable & item.flags():
+            value = item.checkState()
+        else:
+            value = item.text()
+        self[row].attrs[name] = value
 
 
 class tabbed(qt):
