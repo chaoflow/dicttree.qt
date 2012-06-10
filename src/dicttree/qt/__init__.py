@@ -5,6 +5,7 @@ from dicttree.qt import aspects
 QtApp = aspects.qtapp(_Node)
 Node = aspects.qt(_Node)
 
+PushButton = aspects.pushbutton(_Node)
 Label = aspects.label(_Node)
 MainWindow = aspects.mainwindow(_Node)
 MenuBar = aspects.menubar(_Node)

@@ -180,3 +180,11 @@ class tabbed(qt):
         _next(key, val)
         # XXX: support replacing
         self.qt.addTab(val.qt, key)
+
+
+class pushbutton(qt):
+    _qtcls = QPushButton
+
+    @property
+    def qtargs(self):
+        return (self.name,)
