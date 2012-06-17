@@ -126,6 +126,9 @@ class menubar(qt):
 
 class table(qt):
     _qtcls = QTableWidget
+# XXX: does not work yet
+#    _schema = aspect.cfg(aspect.default(None))
+    _schema2 = aspect.cfg(None)
     _silence = False
     _signals = dict(
         itemChanged="itemChanged",
@@ -133,11 +136,19 @@ class table(qt):
     _transpose = aspect.cfg(False)
 
     @property
+    def schema(self):
+        # XXX: not needed once aspect.cfg handles default/overwrite/...
+        try:
+            return self._schema
+        except AttributeError:
+            return self._schema2
+
+    @property
     def qtargs(self):
         if self._transpose:
-            args = [len(self._columns), 0]
+            args = [len(self.schema), 0]
         else:
-            args = [0, len(self._columns)]
+            args = [0, len(self.schema)]
         return args
 
     @aspect.plumb
@@ -148,7 +159,7 @@ class table(qt):
             setHeaders = self.qt.setVerticalHeaderLabels
         else:
             setHeaders = self.qt.setHorizontalHeaderLabels
-        setHeaders([x.name for x in self._columns])
+        setHeaders([x.name for x in self.schema])
 
     @aspect.plumb
     def append(_next, self, node):
@@ -181,7 +192,7 @@ class table(qt):
             return
         row = item.row()
         col = item.column()
-        name = self._columns[col].name
+        name = self.schema[col].name
         if Qt.ItemIsUserCheckable & item.flags():
             value = item.checkState()
         else:
