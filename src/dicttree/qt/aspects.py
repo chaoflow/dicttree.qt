@@ -170,16 +170,21 @@ class table(qt):
             self.qt.setColumnCount(idx+1)
         else:
             self.qt.setRowCount(idx+1)
-        for attr_idx, x in enumerate(node.attrs.values()):
-            # bool's are shown as checkboxes for now and are editable
-            # everything else is readonly
-            if type(x) is bool:
+        for attr_idx, val in enumerate(node.attrs.values()):
+            flags = Qt.ItemIsEnabled
+            readonly = self.schema[attr_idx].readonly
+            if type(val) is bool:
+                # bool's are shown as checkboxes for now - could be
+                # configured via schema
                 item = QTableWidgetItem()
-                item.setFlags(Qt.ItemIsUserCheckable | Qt.ItemIsEnabled)
-                item.setCheckState(Qt.Checked if x else Qt.Unchecked)
+                if not readonly:
+                    flags |= Qt.ItemIsUserCheckable
+                item.setCheckState(Qt.Checked if val else Qt.Unchecked)
             else:
-                item = QTableWidgetItem(str(x))
-                item.setFlags(Qt.ItemIsEnabled)
+                if not readonly:
+                    flags |= Qt.ItemIsEditable
+                item = QTableWidgetItem(str(val))
+            item.setFlags(flags)
             self._silence = True
             if self._transpose:
                 self.qt.setItem(attr_idx, idx, item)
