@@ -130,22 +130,36 @@ class table(qt):
     _signals = dict(
         itemChanged="itemChanged",
         )
+    _transpose = aspect.cfg(False)
 
     @property
     def qtargs(self):
-        args = [
-            self.attrs.get('rows', 0),
-            len(self._columns),
-            ]
+        if self._transpose:
+            args = [len(self._columns), 0]
+        else:
+            args = [0, len(self._columns)]
         return args
 
     @aspect.plumb
-    def append(_next, self, row):
+    def __init__(_next, self, **kw):
+        # call __init__ of parent aspect - is this good?
+        qt.__init__.payload(_next, self, **kw)
+        if self._transpose:
+            setHeaders = self.qt.setVerticalHeaderLabels
+        else:
+            setHeaders = self.qt.setHorizontalHeaderLabels
+        setHeaders([x.name for x in self._columns])
+
+    @aspect.plumb
+    def append(_next, self, node):
         # XXX: move to __setitem__ and support replacing
-        row_idx = len(self.keys())
-        _next(row)
-        self.qt.setRowCount(row_idx+1)
-        for col_idx, x in enumerate(row.attrs.values()):
+        idx = len(self.keys())
+        _next(node)
+        if self._transpose:
+            self.qt.setColumnCount(idx+1)
+        else:
+            self.qt.setRowCount(idx+1)
+        for attr_idx, x in enumerate(node.attrs.values()):
             # bool's are shown as checkboxes for now and are editable
             # everything else is readonly
             if type(x) is bool:
@@ -156,7 +170,10 @@ class table(qt):
                 item = QTableWidgetItem(str(x))
                 item.setFlags(Qt.ItemIsEnabled)
             self._silence = True
-            self.qt.setItem(row_idx, col_idx, item)
+            if self._transpose:
+                self.qt.setItem(attr_idx, idx, item)
+            else:
+                self.qt.setItem(idx, attr_idx, item)
             self._silence = False
 
     def itemChanged(self, item):
