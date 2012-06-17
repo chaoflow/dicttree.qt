@@ -195,14 +195,18 @@ class table(qt):
     def itemChanged(self, item):
         if self._silence:
             return
-        row = item.row()
-        col = item.column()
-        name = self.schema[col].name
+        if self._transpose:
+            attr_idx = item.row()
+            idx = item.column()
+        else:
+            idx = item.row()
+            attr_idx = item.column()
+        field = self.schema[attr_idx]
         if Qt.ItemIsUserCheckable & item.flags():
             value = item.checkState()
         else:
             value = item.text()
-        self[row].attrs[name] = value
+        self[idx].attrs[field.name] = field.type(value)
 
 
 class tabbed(qt):
